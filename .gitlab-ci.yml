@@ -1,0 +1,15 @@
+cache:
+  untracked: true
+  key: ${CI_PROJECT_ID}
+  paths:
+    - .npm/
+
+before_script:
+  - npm ci --cache .npm --prefer-offline
+
+test:
+  image: node:12-alpine
+  stage: test
+  script:
+    - npm lint
+    - npm test
