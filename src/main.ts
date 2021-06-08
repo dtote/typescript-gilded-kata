@@ -1,16 +1,7 @@
-/**
- * Main Class
- */
-export class Main {
-  public static COMMANDS = "Hello World"
+export function add(numbers: string) {
+  // TODO: implement here your code
 
-  public param: string
+  console.log(numbers) // TODO: Remove this line
 
-  constructor(param: string) {
-    this.param = param
-  }
-
-  public getParam(): string {
-    return this.param
-  }
+  return 0
 }
