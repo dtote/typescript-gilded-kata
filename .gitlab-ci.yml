@@ -1,11 +1,5 @@
-include:
-  - project: acid-tango/gitlab/pipelines
-    ref: master
-    file: renovate/renovate.yaml
-
 stages:
   - test
-  - renovate
 
 test:
   stage: test
@@ -17,8 +11,3 @@ test:
     - npm ci
     - npm run lint
     - npm test
-
-renovate:
-  stage: renovate
-  needs: []
-  extends: .renovate-template
