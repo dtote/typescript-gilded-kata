@@ -1,5 +1,5 @@
 type BasicOperation = (variation: number) => void;
-type NameCheck = (name: string) =>  boolean;
+type NameCheck = (...names: string[]) =>  boolean;
 export interface ItemInterface {
     name: string;
     sellIn: number,
@@ -11,7 +11,7 @@ export interface ItemInterface {
     hasSameNameThat: NameCheck;
 
 }
-const names = {
+export const names = {
     agedBrie: 'Aged Brie',
     backstage: 'Backstage passes to a TAFKAL80ETC concert',
     sulfuras: 'Sulfuras, Hand of Ragnaros',
@@ -30,8 +30,8 @@ export class Item implements ItemInterface {
     increaseSellIn(variation: number): void {
         this.sellIn += variation;
     }
-    hasSameNameThat(name: string): boolean {
-        return this.name === name;
+    hasSameNameThat(...names: string[]): boolean {
+        return names.some((name) => name === this.name);
     }
 }
 
@@ -40,30 +40,26 @@ export class GildedRose {
 
     updateQuality() {
         for (let i = 0; i < this.items.length; i++) {
-            if (!this.items[i].hasSameNameThat(names.agedBrie) && 
-                !this.items[i].hasSameNameThat(names.backstage) && 
-                this.items[i].quality > 0 && 
-                !this.items[i].hasSameNameThat(names.sulfuras)) 
-            {
-                this.items[i].decreaseQuality(1);
-            } else {
-                if (this.items[i].quality < 50) this.items[i].increaseQuality(1);
-                if (!this.items[i].hasSameNameThat(names.backstage) && 
-                    ((this.items[i].sellIn + 1) < 6) && this.items[i].quality < 50) {
-                    this.items[i].increaseQuality(2);
-                } else {
-                    this.items[i].increaseQuality(1);
-                }
+            const currentItem: Item = this.items[i];
+            const notBackStage = !currentItem.hasSameNameThat(names.backstage)
+            const increasedSellInIsUnderSix = (currentItem.sellIn + 1) < 6
+            if (!currentItem.hasSameNameThat(names.agedBrie, names.backstage, names.sulfuras) && currentItem.quality > 0) {
+                currentItem.decreaseQuality(1);
+            } else if (notBackStage && increasedSellInIsUnderSix && (currentItem.quality + 1) < 50) {
+                    currentItem.increaseQuality(3);
+            } else if ((currentItem.quality + 1) < 50){
+                    currentItem.increaseQuality(2);
             }
-            if (!this.items[i].hasSameNameThat(names.sulfuras)) this.items[i].decreaseSellIn(1);
-            if (this.items[i].sellIn < 0 && !this.items[i].hasSameNameThat) {
-                if (!this.items[i].hasSameNameThat(names.backstage) && this.items[i].quality > 0 && !this.items[i].hasSameNameThat(names.sulfuras)) {
-                    this.items[i].increaseQuality(1);
+    
+            if (!currentItem.hasSameNameThat(names.sulfuras)) currentItem.decreaseSellIn(1);
+            if (currentItem.sellIn < 0 && !currentItem.hasSameNameThat(names.agedBrie)) {
+                if (!currentItem.hasSameNameThat(names.backstage, names.sulfuras) && currentItem.quality > 0) {
+                    currentItem.increaseQuality(1);
                 } else {
-                    this.items[i].decreaseQuality(this.items[i].quality);
+                    currentItem.decreaseQuality(currentItem.quality);
                 }
-            } else if (this.items[i].quality < 50){
-                this.items[i].increaseQuality(1);
+            } else if (currentItem.quality < 50){
+                currentItem.increaseQuality(1);
             }
         }
         return this.items;
