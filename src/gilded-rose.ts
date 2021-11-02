@@ -1,5 +1,4 @@
 type BasicOperation = (variation: number) => void;
-type NameCheck = (...names: string[]) =>  boolean;
 export interface ItemInterface {
     name: string;
     sellIn: number,
@@ -8,13 +7,9 @@ export interface ItemInterface {
     decreaseSellIn: BasicOperation;
     increaseQuality: BasicOperation;
     increaseSellIn: BasicOperation;
-    hasSameNameThat: NameCheck;
-
 }
-export const names = {
-    agedBrie: 'Aged Brie',
-    backstage: 'Backstage passes to a TAFKAL80ETC concert',
-    sulfuras: 'Sulfuras, Hand of Ragnaros',
+interface Stats {
+    [key: string]: void;
 }
 export class Item implements ItemInterface {
     constructor(public name: string, public sellIn: number, public quality: number) {}
@@ -30,37 +25,48 @@ export class Item implements ItemInterface {
     increaseSellIn(variation: number): void {
         this.sellIn += variation;
     }
-    hasSameNameThat(...names: string[]): boolean {
-        return names.some((name) => name === this.name);
-    }
 }
 
 export class GildedRose {
-    constructor(private items: Item[]) {}
-
-    updateQuality() {
-        for (let i = 0; i < this.items.length; i++) {
-            const currentItem: Item = this.items[i];
-            const notBackStage = !currentItem.hasSameNameThat(names.backstage)
-            const increasedSellInIsUnderSix = (currentItem.sellIn + 1) < 6
-            if (!currentItem.hasSameNameThat(names.agedBrie, names.backstage, names.sulfuras) && currentItem.quality > 0) {
-                currentItem.decreaseQuality(1);
-            } else if (notBackStage && increasedSellInIsUnderSix && (currentItem.quality + 1) < 50) {
-                    currentItem.increaseQuality(3);
-            } else if ((currentItem.quality + 1) < 50){
-                    currentItem.increaseQuality(2);
-            }
+    maxBound = 50;
+    minBound = 0;
     
-            if (!currentItem.hasSameNameThat(names.sulfuras)) currentItem.decreaseSellIn(1);
-            if (currentItem.sellIn < 0 && !currentItem.hasSameNameThat(names.agedBrie)) {
-                if (!currentItem.hasSameNameThat(names.backstage, names.sulfuras) && currentItem.quality > 0) {
-                    currentItem.increaseQuality(1);
-                } else {
-                    currentItem.decreaseQuality(currentItem.quality);
-                }
-            } else if (currentItem.quality < 50){
-                currentItem.increaseQuality(1);
+    constructor(private items: Item[]) {}
+    updateSulfurasStats(item: Item) {
+        if (item.quality < this.maxBound) item.increaseQuality(1);
+        if ((item.sellIn + 1) < 6 && (item.quality < this.maxBound)) {
+            item.increaseQuality(2);
+        }
+        if (item.sellIn < this.minBound) item.decreaseQuality(1);
+        else if (item.sellIn > this.minBound) item.increaseQuality(1);
+    }
+    updateBackstageStats(item: Item) {
+        item.decreaseSellIn(1);
+        if (item.sellIn < this.minBound) item.decreaseQuality(1);
+        else if (item.sellIn > this.minBound) item.increaseQuality(1);
+    }
+    updateAgedBrieStats(item: Item) {
+        if (item.quality < this.maxBound) item.increaseQuality(1);
+        if ((item.sellIn + 1) < 6 && (item.quality < this.maxBound)) {
+            item.increaseQuality(2);
+        }
+        item.decreaseSellIn(1);
+        item.increaseQuality(1);
+    }
+    updateDefaultStats(item: Item) {
+        if (item.quality < this.minBound) item.decreaseQuality(1);
+        else if (item.sellIn < this.minBound) item.increaseQuality(1);
+        if (item.sellIn > this.minBound) item.increaseQuality(1);
+    }
+    updateQuality() {
+        for (const item of this.items) {
+            const updateStats: Stats = {
+                'Aged Brie': this.updateAgedBrieStats(item),
+                'Backstage passes to a TAFKAL80ETC concert': this.updateBackstageStats(item),
+                'Sulfuras, Hand of Ragnaros': this.updateSulfurasStats(item),
             }
+            const found = Object.keys(updateStats).find((key) => key === item.name);
+            found ? updateStats[item.name] : this.updateDefaultStats(item);
         }
         return this.items;
     }
